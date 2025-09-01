@@ -16,15 +16,43 @@
 
 HWND hTargetEdit, hResultsEdit, hReportsList;
 HINSTANCE hInst;
+HFONT hFont, hBoldFont;
 
 void ensure_reports_dir(void) {
     CreateDirectoryA("reports", NULL);
 }
 
 void update_results_display(const char* text) {
-    int len = MultiByteToWideChar(CP_UTF8, 0, text, -1, NULL, 0);
+    // Clean and format the text for better readability
+    char formatted_text[8192];
+    strcpy(formatted_text, text);
+    
+    // Replace emojis with cleaner text indicators for better Windows display
+    char *pos;
+    while((pos = strstr(formatted_text, "🔍")) != NULL) {
+        memcpy(pos, "[RECON]", 7);
+        memmove(pos + 7, pos + 4, strlen(pos + 4) + 1); // 4 bytes for emoji
+    }
+    while((pos = strstr(formatted_text, "🛡️")) != NULL) {
+        memcpy(pos, "[VULN] ", 7);
+        memmove(pos + 7, pos + 7, strlen(pos + 7) + 1); // Skip the second emoji byte
+    }
+    while((pos = strstr(formatted_text, "🤖")) != NULL) {
+        memcpy(pos, "[AI]   ", 7);
+        memmove(pos + 7, pos + 4, strlen(pos + 4) + 1);
+    }
+    while((pos = strstr(formatted_text, "✅")) != NULL) {
+        memcpy(pos, "[OK]   ", 7);
+        memmove(pos + 7, pos + 4, strlen(pos + 4) + 1);
+    }
+    while((pos = strstr(formatted_text, "❌")) != NULL) {
+        memcpy(pos, "[FAIL] ", 7);
+        memmove(pos + 7, pos + 4, strlen(pos + 4) + 1);
+    }
+    
+    int len = MultiByteToWideChar(CP_UTF8, 0, formatted_text, -1, NULL, 0);
     wchar_t* wtext = malloc(len * sizeof(wchar_t));
-    MultiByteToWideChar(CP_UTF8, 0, text, -1, wtext, len);
+    MultiByteToWideChar(CP_UTF8, 0, formatted_text, -1, wtext, len);
     SetWindowTextW(hResultsEdit, wtext);
     free(wtext);
 }
@@ -52,15 +80,18 @@ void run_scan_module(int module_type, const char* target) {
     switch(module_type) {
         case 1: // Recon
             rc = run_recon(target, &results, &count);
-            strcat(result_text, "🔍 RECONNAISSANCE RESULTS\n\n");
+            strcat(result_text, "🔍 RECONNAISSANCE RESULTS\r\n");
+            strcat(result_text, "================================\r\n\r\n");
             break;
         case 2: // Vuln
             rc = run_vuln(target, &results, &count);
-            strcat(result_text, "🛡️ VULNERABILITY SCAN RESULTS\n\n");
+            strcat(result_text, "🛡️ VULNERABILITY SCAN RESULTS\r\n");
+            strcat(result_text, "================================\r\n\r\n");
             break;
         case 3: // AI
             rc = run_ai_analysis(target, "scan_data", &results, &count);
-            strcat(result_text, "🤖 AI/ML ANALYSIS RESULTS\n\n");
+            strcat(result_text, "🤖 AI/ML ANALYSIS RESULTS\r\n");
+            strcat(result_text, "================================\r\n\r\n");
             break;
         case 4: // Full
             {
@@ -81,7 +112,10 @@ void run_scan_module(int module_type, const char* target) {
                     
                     ensure_reports_dir();
                     run_report(results, count, target);
-                    strcat(result_text, "✅ FULL WORKFLOW WITH AI COMPLETED\n\n");
+                    strcat(result_text, "✅ FULL WORKFLOW WITH AI COMPLETED\r\n");
+                    strcat(result_text, "====================================\r\n\r\n");
+                    strcat(result_text, "Report generated successfully!\r\n");
+                    strcat(result_text, "Check the reports list below for details.\r\n\r\n");
                     refresh_reports_list();
                 }
                 rc = 0;
@@ -90,17 +124,32 @@ void run_scan_module(int module_type, const char* target) {
     }
     
     if(rc == 0 && results) {
-        for(size_t i = 0; i < count && i < 20; i++) { // Limit display for GUI
-            char line[256];
-            snprintf(line, sizeof(line), "• %s: %.100s...\n", results[i].name, results[i].data);
+        for(size_t i = 0; i < count && i < 15; i++) { // Limit display for GUI
+            char line[300];
+            char truncated_data[200];
+            
+            // Truncate long data for better display
+            if(strlen(results[i].data) > 180) {
+                strncpy(truncated_data, results[i].data, 180);
+                truncated_data[180] = '\0';
+                strcat(truncated_data, "...");
+            } else {
+                strcpy(truncated_data, results[i].data);
+            }
+            
+            snprintf(line, sizeof(line), "-> %s:\r\n   %s\r\n\r\n", 
+                     results[i].name, truncated_data);
             strcat(result_text, line);
         }
-        if(count > 20) {
-            strcat(result_text, "\n... (see full report for complete results)\n");
+        if(count > 15) {
+            strcat(result_text, "\r\n*** Additional findings available in full report ***\r\n");
+            strcat(result_text, "*** Double-click a report file below to view all results ***\r\n");
         }
         free_results(results, count);
-    } else {
-        strcat(result_text, "❌ Scan failed\n");
+    } else if(rc != 0) {
+        strcat(result_text, "❌ SCAN FAILED\r\n");
+        strcat(result_text, "================\r\n\r\n");
+        strcat(result_text, "Please check your target and try again.\r\n");
     }
     
     update_results_display(result_text);
@@ -110,12 +159,37 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     switch(msg) {
         case WM_CREATE:
             {
+                // Create improved fonts
+                hFont = CreateFont(
+                    -14,                        // Height
+                    0,                          // Width
+                    0,                          // Escapement
+                    0,                          // Orientation
+                    FW_NORMAL,                  // Weight
+                    FALSE,                      // Italic
+                    FALSE,                      // Underline
+                    FALSE,                      // StrikeOut
+                    ANSI_CHARSET,               // CharSet
+                    OUT_DEFAULT_PRECIS,         // OutPrecision
+                    CLIP_DEFAULT_PRECIS,        // ClipPrecision
+                    CLEARTYPE_QUALITY,          // Quality
+                    DEFAULT_PITCH | FF_MODERN,  // Pitch and Family
+                    "Consolas"                  // Font name
+                );
+                
+                hBoldFont = CreateFont(
+                    -14, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE,
+                    ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
+                    CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_MODERN, "Consolas"
+                );
+                
                 // Target input
                 CreateWindowW(L"STATIC", L"Target:", WS_VISIBLE | WS_CHILD,
                              10, 10, 60, 20, hwnd, NULL, hInst, NULL);
                 hTargetEdit = CreateWindowW(L"EDIT", L"example.com", 
                                           WS_VISIBLE | WS_CHILD | WS_BORDER,
                                           80, 10, 200, 25, hwnd, (HMENU)ID_TARGET_EDIT, hInst, NULL);
+                SendMessage(hTargetEdit, WM_SETFONT, (WPARAM)hFont, TRUE);
                 
                 // Buttons
                 CreateWindowW(L"BUTTON", L"🔍 Recon", WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON,
@@ -130,9 +204,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 // Results display
                 CreateWindowW(L"STATIC", L"Results:", WS_VISIBLE | WS_CHILD,
                              10, 95, 60, 20, hwnd, NULL, hInst, NULL);
-                hResultsEdit = CreateWindowW(L"EDIT", L"Ready for AI-powered scanning...", 
+                hResultsEdit = CreateWindowW(L"EDIT", L"Ready for AI-powered scanning...\r\n\r\nSelect a target and click a scan button to begin analysis.", 
                                            WS_VISIBLE | WS_CHILD | WS_BORDER | WS_VSCROLL | ES_MULTILINE | ES_READONLY,
                                            10, 120, 420, 200, hwnd, (HMENU)ID_RESULTS_EDIT, hInst, NULL);
+                SendMessage(hResultsEdit, WM_SETFONT, (WPARAM)hFont, TRUE);
                 
                 // Reports list
                 CreateWindowW(L"STATIC", L"Generated Reports:", WS_VISIBLE | WS_CHILD,
@@ -140,6 +215,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 hReportsList = CreateWindowW(L"LISTBOX", NULL,
                                            WS_VISIBLE | WS_CHILD | WS_BORDER | WS_VSCROLL,
                                            10, 360, 420, 100, hwnd, (HMENU)ID_REPORTS_LIST, hInst, NULL);
+                SendMessage(hReportsList, WM_SETFONT, (WPARAM)hFont, TRUE);
                 
                 ensure_reports_dir();
                 refresh_reports_list();
@@ -182,6 +258,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             break;
             
         case WM_DESTROY:
+            // Cleanup fonts
+            if(hFont) DeleteObject(hFont);
+            if(hBoldFont) DeleteObject(hBoldFont);
             PostQuitMessage(0);
             break;
             
@@ -208,7 +287,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
         return 0;
     }
     
-    HWND hwnd = CreateWindowW(L"PenTestGUI", L"🔒 AI-Powered PenTest Automation Toolkit",
+    HWND hwnd = CreateWindowW(L"PenTestGUI", L"SecureScan Pro - Penetration Testing Suite",
                              WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, CW_USEDEFAULT,
                              460, 520, NULL, NULL, hInstance, NULL);
     

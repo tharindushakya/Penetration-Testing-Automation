@@ -85,7 +85,8 @@ int main(int argc, char **argv) {
     } else {
         strcpy(target, "example.com");
     }
-    printf("PenTest Automation Toolkit (interactive)\n");
+    printf("SecureScan Pro - Penetration Testing Suite (CLI)\n");
+    printf("=============================================\n");
     for(;;) {
         printf("\nTarget: %s\n", target);
         printf("[1] Recon only\n[2] Vulnerability scan only\n[3] 🤖 AI/ML Analysis\n[4] Full workflow (recon+vuln+AI+report)\n[5] Change target\n[0] Exit\n> ");

@@ -1,15 +1,15 @@
 CC = gcc
 CFLAGS = -std=c11 -Wall -Wextra -O2 -Iinclude
-LDFLAGS = 
-LDFLAGS_GUI = -lgdi32 -luser32 -lkernel32 -lshell32
+LDFLAGS = -lm
+LDFLAGS_GUI = -lgdi32 -luser32 -lkernel32 -lshell32 -lm
 
 SRC_DIR = src
 OBJ_DIR = build
-BIN_CLI = pentest
-BIN_GUI = pentest-gui
+BIN_CLI = SecureScan-CLI
+BIN_GUI = SecureScan-Pro
 
 # Source files
-CORE_SRCS = $(SRC_DIR)/engine.c $(SRC_DIR)/ruleset.c $(SRC_DIR)/report.c
+CORE_SRCS = $(SRC_DIR)/engine.c $(SRC_DIR)/ruleset.c $(SRC_DIR)/report.c $(SRC_DIR)/ai_detector.c
 CLI_SRCS = $(CORE_SRCS) $(SRC_DIR)/main.c
 GUI_SRCS = $(CORE_SRCS) $(SRC_DIR)/gui.c
 
@@ -40,8 +40,11 @@ $(OBJ_DIR)/%.o: $(SRC_DIR)/%.c | $(OBJ_DIR)
 $(OBJ_DIR)/gui_%.o: $(SRC_DIR)/%.c | $(OBJ_DIR)
 	$(CC) $(CFLAGS) -c $< -o $@
 
-run: $(BIN_CLI)
+run-cli: $(BIN_CLI)
 	./$(BIN_CLI)
+
+run-gui: $(BIN_GUI)
+	./$(BIN_GUI)
 
 clean:
 	rm -rf $(OBJ_DIR) $(BIN_CLI) $(BIN_GUI)
