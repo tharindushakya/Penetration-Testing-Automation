@@ -102,14 +102,8 @@ static void run_single(const char *target, int which) {
 }
 
 int main(int argc, char **argv) {
-    // Initialize enterprise security controls
+    // Initialize security controls
     initialize_security_controls();
-    
-    // Check professional authorization for organizational use
-    if (!check_professional_authorization()) {
-        secure_organizational_cleanup();
-        return 1;
-    }
     
     char target[256];
     
@@ -144,8 +138,7 @@ int main(int argc, char **argv) {
         strcpy(target, "example.com");
     }
     
-    printf("SecureScan Pro - Professional Penetration Testing Suite\n");
-    printf("Licensed to: %s\n", get_authorized_organization());
+    printf("SecureScan Pro - Open Source Penetration Testing Suite\n");
     if (is_running_from_removable_media()) {
         printf("=== PORTABLE MODE - USB EXECUTION ===\n");
     }

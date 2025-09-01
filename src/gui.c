@@ -16,9 +16,10 @@
 #define ID_RESULTS_EDIT 1006
 #define ID_REPORTS_LIST 1007
 #define ID_PIN_BTN 1008
+#define ID_GHOST_TOGGLE 1009
 
 HWND hTargetEdit, hResultsEdit, hReportsList;
-HWND hTargetLabel, hResultsLabel, hReportsLabel, hPinBtn;  // Add pin button
+HWND hTargetLabel, hResultsLabel, hReportsLabel, hPinBtn, hGhostToggle;
 HINSTANCE hInst;
 HFONT hFont, hBoldFont;
 BOOL isPinned = FALSE;
@@ -194,6 +195,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                              310, 8, 40, 22, hwnd, (HMENU)ID_PIN_BTN, hInst, NULL);
                 SendMessage(hPinBtn, WM_SETFONT, (WPARAM)hFont, TRUE);
                 
+                // Ghost mode toggle button
+                hGhostToggle = CreateWindowW(L"BUTTON", L"Ghost: ON", WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON,
+                             240, 8, 65, 22, hwnd, (HMENU)ID_GHOST_TOGGLE, hInst, NULL);
+                SendMessage(hGhostToggle, WM_SETFONT, (WPARAM)hFont, TRUE);
+                
                 // Buttons with compact sizes and simple text
                 HWND hReconBtn = CreateWindowW(L"BUTTON", L"Recon", WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON,
                              10, 40, 60, 25, hwnd, (HMENU)ID_RECON_BTN, hInst, NULL);
@@ -240,6 +246,19 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             switch(LOWORD(wParam)) {
                 case ID_PIN_BTN:
                     toggle_pin_window(hwnd);
+                    break;
+                    
+                case ID_GHOST_TOGGLE:
+                    {
+                        // Toggle ghost mode
+                        if (is_ghost_mode()) {
+                            set_ghost_mode(0);
+                            SetWindowTextA(hGhostToggle, "Ghost: OFF");
+                        } else {
+                            set_ghost_mode(1);
+                            SetWindowTextA(hGhostToggle, "Ghost: ON");
+                        }
+                    }
                     break;
                     
                 case ID_RECON_BTN:
@@ -298,16 +317,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow) {
     (void)hPrevInstance; (void)lpCmdLine;
     
-    // Initialize enterprise security controls
+    // Initialize security controls
     initialize_security_controls();
-    
-    // Check professional authorization for organizational use
-    if (!check_professional_authorization()) {
-        MessageBoxA(NULL, "Professional license required for organizational use.", 
-                   "Authorization Required", MB_ICONWARNING);
-        secure_organizational_cleanup();
-        return 1;
-    }
     
     hInst = hInstance;
     

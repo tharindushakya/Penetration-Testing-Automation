@@ -1,8 +1,8 @@
 /*
  * Security Hardening Module
- * Professional Penetration Testing Suite
+ * Open Source Penetration Testing Suite
  * 
- * Enterprise-grade security controls for organizational compliance
+ * Security controls for safe penetration testing
  * Anti-malware protection and vulnerability mitigation
  */
 
@@ -11,14 +11,9 @@
 #include <string.h>
 #include <windows.h>
 #include <time.h>
-#include <wincrypt.h>
 #include <shlobj.h>
 #include "security_hardening.h"
 #include "secure_ops.h"
-
-static int authorization_valid = 0;
-static char license_key[128] = {0};
-static char authorized_org[256] = {0};
 
 // Buffer overflow protection
 void enable_dep_aslr() {
@@ -101,44 +96,6 @@ int detect_analysis_environment() {
     return suspicious;
 }
 
-// Secure license validation for organizational use
-int validate_professional_license(const char* org_name, const char* license) {
-    if (!org_name || !license) return 0;
-    
-    // Simple hash-based validation (in real implementation, use proper crypto)
-    char expected[64];
-    snprintf(expected, sizeof(expected), "PROSEC_%s_2025", org_name);
-    
-    HCRYPTPROV hCryptProv;
-    HCRYPTHASH hHash;
-    DWORD hash_len = 32;
-    BYTE hash[32];
-    
-    if (CryptAcquireContext(&hCryptProv, NULL, NULL, PROV_RSA_FULL, CRYPT_VERIFYCONTEXT)) {
-        if (CryptCreateHash(hCryptProv, CALG_SHA_256, 0, 0, &hHash)) {
-            CryptHashData(hHash, (BYTE*)expected, strlen(expected), 0);
-            CryptGetHashParam(hHash, HP_HASHVAL, hash, &hash_len, 0);
-            CryptDestroyHash(hHash);
-        }
-        CryptReleaseContext(hCryptProv, 0);
-    }
-    
-    // Convert hash to hex string for comparison
-    char hash_str[65] = {0};
-    for (int i = 0; i < 32; i++) {
-        sprintf(hash_str + i*2, "%02x", hash[i]);
-    }
-    
-    if (strncmp(license, hash_str, 64) == 0) {
-        authorization_valid = 1;
-        strncpy(authorized_org, org_name, sizeof(authorized_org)-1);
-        strncpy(license_key, license, sizeof(license_key)-1);
-        return 1;
-    }
-    
-    return 0;
-}
-
 // Portable execution checker
 int is_running_from_removable_media() {
     char exe_path[MAX_PATH];
@@ -149,9 +106,9 @@ int is_running_from_removable_media() {
     return 0;
 }
 
-// Secure cleanup for organizational compliance
+// Secure cleanup for system hygiene
 void secure_organizational_cleanup() {
-    printf("[COMPLIANCE] Performing organizational security cleanup...\n");
+    printf("[CLEANUP] Performing security cleanup...\n");
     
     // Clear all temporary files
     char temp_path[MAX_PATH];
@@ -185,7 +142,7 @@ void secure_organizational_cleanup() {
         CloseEventLog(hEventLog);
     }
     
-    printf("[COMPLIANCE] Organizational cleanup complete - no traces left\n");
+    printf("[CLEANUP] Security cleanup complete - no traces left\n");
 }
 
 // Network security controls
@@ -229,36 +186,6 @@ int verify_integrity() {
     return (file_size.QuadPart > 50000 && file_size.QuadPart < 500000);
 }
 
-// Professional authorization check
-int check_professional_authorization() {
-    if (!authorization_valid) {
-        printf("\n=== PROFESSIONAL LICENSE REQUIRED ===\n");
-        printf("This tool requires professional authorization for organizational use.\n");
-        printf("Please contact your security administrator for proper licensing.\n");
-        printf("=====================================\n\n");
-        
-        char org[256], license[128];
-        printf("Organization: ");
-        if (fgets(org, sizeof(org), stdin)) {
-            org[strcspn(org, "\n")] = 0; // Remove newline
-        }
-        
-        printf("License Key: ");
-        if (fgets(license, sizeof(license), stdin)) {
-            license[strcspn(license, "\n")] = 0; // Remove newline
-        }
-        
-        if (validate_professional_license(org, license)) {
-            printf("[AUTH] Professional license validated for: %s\n", org);
-            return 1;
-        } else {
-            printf("[AUTH] Invalid license. Access denied.\n");
-            return 0;
-        }
-    }
-    return 1;
-}
-
 // Initialize all security controls
 void initialize_security_controls() {
     printf("[SECURITY] Initializing enterprise security controls...\n");
@@ -288,14 +215,4 @@ void initialize_security_controls() {
     }
     
     printf("[SECURITY] Security controls initialized successfully\n");
-}
-
-// Get authorization status
-int is_professionally_authorized() {
-    return authorization_valid;
-}
-
-// Get authorized organization
-const char* get_authorized_organization() {
-    return authorization_valid ? authorized_org : "UNAUTHORIZED";
 }

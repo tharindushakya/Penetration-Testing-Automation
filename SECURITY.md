@@ -1,44 +1,35 @@
-# SecureScan Pro - Enterprise Security & Compliance Guide
+# SecureScan Pro - Open Source Security & Compliance Guide
 
 ## 🛡️ Security Features
 
 ### **Ghost Mode (Default)**
+
 - **No File Artifacts**: All reports generated in memory only
 - **Secure Memory Management**: Encrypted memory allocation with automatic cleanup
 - **Anti-Forensics**: No traces left on target systems
 - **Portable Execution**: Runs entirely from USB without installation
 
 ### **Input Validation & Protection**
+
 - **Command Injection Prevention**: All inputs sanitized and validated
 - **Buffer Overflow Protection**: DEP/ASLR enabled, secure string handling
 - **Anti-Debugging**: Detects analysis tools and virtual machines
 - **Integrity Verification**: Runtime file integrity checks
 
-### **Professional Licensing System**
-- **Organizational Authorization**: Required for enterprise deployment
-- **Accountability Tracking**: All scans logged with organization identity
-- **License Validation**: Cryptographic license key verification
-- **Compliance Ready**: Meets enterprise security requirements
-
-## 🏢 Organizational Deployment
+## 🏢 Open Source Deployment
 
 ### **USB Deployment Process**
-1. **Generate License**: Use `LicenseGen.exe "Your Organization Name"`
-2. **Copy Files**: Place executables on USB drive
-3. **Deploy**: Run on target systems - no installation required
-4. **Authorize**: Enter organization name and license key when prompted
+
+1. **Copy Files**: Place executables on USB drive
+2. **Deploy**: Run on target systems - no installation required
+3. **Use Ghost Mode**: Default mode leaves no traces
 
 ### **Compliance Features**
+
 - **No Installation Required**: Portable execution from USB
 - **Ghost Mode Default**: No artifacts left on target systems
 - **Automatic Cleanup**: Removes temporary files and registry entries
-- **Professional Logging**: All activities tracked with organization identity
-
-### **Legal Protection**
-- **Professional Licensing**: Prevents unauthorized use by threat actors
-- **Organization Tracking**: All scans attributed to licensed organization
-- **Audit Trail**: Complete logging of all security testing activities
-- **Compliance Ready**: Meets enterprise penetration testing standards
+- **Open Source**: Full transparency and auditability
 
 ## 🔒 Vulnerability Mitigations
 
