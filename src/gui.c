@@ -2,6 +2,7 @@
 #include "report.h"
 #include "ai_detector.h"
 #include "secure_ops.h"
+#include "security_hardening.h"
 #include <windows.h>
 #include <commctrl.h>
 #include <stdio.h>
@@ -249,6 +250,13 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         char target[256];
                         GetWindowTextA(hTargetEdit, target, sizeof(target));
                         
+                        // Validate input for security
+                        if (!validate_target_input(target)) {
+                            MessageBoxA(hwnd, "Invalid target format or potentially malicious input detected.\nPlease enter a valid domain or IP address.", 
+                                       "Security Warning", MB_ICONWARNING);
+                            break;
+                        }
+                        
                         int module = LOWORD(wParam) - ID_RECON_BTN + 1;
                         run_scan_module(module, target);
                     }
@@ -290,6 +298,17 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow) {
     (void)hPrevInstance; (void)lpCmdLine;
     
+    // Initialize enterprise security controls
+    initialize_security_controls();
+    
+    // Check professional authorization for organizational use
+    if (!check_professional_authorization()) {
+        MessageBoxA(NULL, "Professional license required for organizational use.", 
+                   "Authorization Required", MB_ICONWARNING);
+        secure_organizational_cleanup();
+        return 1;
+    }
+    
     hInst = hInstance;
     
     WNDCLASSEXW wc = {0};
@@ -326,5 +345,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
         DispatchMessage(&msg);
     }
     
+    // Secure cleanup before exit (organizational compliance)
+    secure_organizational_cleanup();
     return msg.wParam;
 }

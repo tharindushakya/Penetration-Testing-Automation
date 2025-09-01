@@ -1,5 +1,6 @@
 #include "engine.h"
 #include "secure_ops.h"
+#include "security_hardening.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -101,6 +102,15 @@ static void run_single(const char *target, int which) {
 }
 
 int main(int argc, char **argv) {
+    // Initialize enterprise security controls
+    initialize_security_controls();
+    
+    // Check professional authorization for organizational use
+    if (!check_professional_authorization()) {
+        secure_organizational_cleanup();
+        return 1;
+    }
+    
     char target[256];
     
     // Check for ghost mode override
@@ -113,16 +123,32 @@ int main(int argc, char **argv) {
         }
     }
     
-    // Set target
+    // Set target with validation
     if(argc > 1 && !ghost_disabled) {
-        strncpy(target, argv[1], sizeof(target)-1); target[sizeof(target)-1]='\0';
+        if (!validate_target_input(argv[1])) {
+            printf("[ERROR] Invalid target format or potentially malicious input\n");
+            secure_organizational_cleanup();
+            return 1;
+        }
+        strncpy(target, argv[1], sizeof(target)-1); 
+        target[sizeof(target)-1] = '\0';
     } else if (argc > 2 && ghost_disabled) {
-        strncpy(target, argv[2], sizeof(target)-1); target[sizeof(target)-1]='\0';
+        if (!validate_target_input(argv[2])) {
+            printf("[ERROR] Invalid target format or potentially malicious input\n");
+            secure_organizational_cleanup();
+            return 1;
+        }
+        strncpy(target, argv[2], sizeof(target)-1); 
+        target[sizeof(target)-1] = '\0';
     } else {
         strcpy(target, "example.com");
     }
     
-    printf("SecureScan Pro - Penetration Testing Suite (CLI)\n");
+    printf("SecureScan Pro - Professional Penetration Testing Suite\n");
+    printf("Licensed to: %s\n", get_authorized_organization());
+    if (is_running_from_removable_media()) {
+        printf("=== PORTABLE MODE - USB EXECUTION ===\n");
+    }
     if (is_ghost_mode()) {
         printf("=== GHOST MODE ACTIVE - NO ARTIFACTS ===\n");
     } else {
@@ -155,5 +181,7 @@ int main(int argc, char **argv) {
         printf("[GHOST] Session terminated. All traces eliminated.\n");
     }
     
+    // Secure cleanup before exit (organizational compliance)
+    secure_organizational_cleanup();
     return 0;
 }
