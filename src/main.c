@@ -1,4 +1,5 @@
 #include "engine.h"
+#include "secure_ops.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -10,7 +11,14 @@
 #define MKDIR(path) mkdir(path, 0755)
 #endif
 
+// No longer create reports directory in ghost mode
 static void ensure_reports_dir(void) {
+    if (is_ghost_mode()) {
+        printf("[GHOST] Operating in stealth mode - no file artifacts\n");
+        return;  // Skip directory creation in ghost mode
+    }
+    
+    // Legacy mode - create reports directory  
     FILE *f = fopen("reports/.probe","w");
     if(!f) {
         /* try create */
@@ -54,10 +62,24 @@ static void run_full(const char *target) {
     
     free(recon); free(vuln); free(ai_results);
     
-    ensure_reports_dir();
-    if(run_report(all, total, target) != 0) {
-        fprintf(stderr, "[!] Report generation failed\n");
+    // Use secure memory reporting in ghost mode
+    if (is_ghost_mode()) {
+        char* memory_report = generate_memory_report(all, total, target);
+        if (memory_report) {
+            printf("\n=== SECURE IN-MEMORY REPORT ===\n");
+            printf("%s", memory_report);
+            printf("=== END SECURE REPORT ===\n\n");
+            secure_free(memory_report, strlen(memory_report) + 1);
+        }
+        printf("[GHOST] Scan complete. No files created. No traces left.\n");
+    } else {
+        // Legacy file reporting mode
+        ensure_reports_dir();
+        if(run_report(all, total, target) != 0) {
+            fprintf(stderr, "[!] Report generation failed\n");
+        }
     }
+    
     free_results(all, total);
 }
 
@@ -80,12 +102,32 @@ static void run_single(const char *target, int which) {
 
 int main(int argc, char **argv) {
     char target[256];
-    if(argc>1) {
+    
+    // Check for ghost mode override
+    int ghost_disabled = 0;
+    for (int i = 1; i < argc; i++) {
+        if (strcmp(argv[i], "--no-ghost") == 0 || strcmp(argv[i], "-ng") == 0) {
+            ghost_disabled = 1;
+            set_ghost_mode(0);
+            printf("[WARNING] Ghost mode DISABLED - files will be created!\n");
+        }
+    }
+    
+    // Set target
+    if(argc > 1 && !ghost_disabled) {
         strncpy(target, argv[1], sizeof(target)-1); target[sizeof(target)-1]='\0';
+    } else if (argc > 2 && ghost_disabled) {
+        strncpy(target, argv[2], sizeof(target)-1); target[sizeof(target)-1]='\0';
     } else {
         strcpy(target, "example.com");
     }
+    
     printf("SecureScan Pro - Penetration Testing Suite (CLI)\n");
+    if (is_ghost_mode()) {
+        printf("=== GHOST MODE ACTIVE - NO ARTIFACTS ===\n");
+    } else {
+        printf("=== FILE MODE - REPORTS WILL BE SAVED ===\n");
+    }
     printf("=============================================\n");
     for(;;) {
         printf("\nTarget: %s\n", target);
@@ -106,5 +148,12 @@ int main(int argc, char **argv) {
             default: printf("Invalid option\n"); break;
         }
     }
+    
+    // Secure cleanup on exit
+    if (is_ghost_mode()) {
+        clear_artifacts();
+        printf("[GHOST] Session terminated. All traces eliminated.\n");
+    }
+    
     return 0;
 }

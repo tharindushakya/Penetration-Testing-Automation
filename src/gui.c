@@ -1,6 +1,7 @@
 #include "engine.h"
 #include "report.h"
 #include "ai_detector.h"
+#include "secure_ops.h"
 #include <windows.h>
 #include <commctrl.h>
 #include <stdio.h>
@@ -22,6 +23,9 @@ HFONT hFont, hBoldFont;
 BOOL isPinned = FALSE;
 
 void ensure_reports_dir(void) {
+    if (is_ghost_mode()) {
+        return;  // Skip directory creation in ghost mode - no artifacts
+    }
     CreateDirectoryA("reports", NULL);
 }
 
