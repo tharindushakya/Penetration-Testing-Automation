@@ -1,28 +1,30 @@
-# SecureScan Toolkit
+# SecureScan Pro - Open Source Penetration Testing Toolkit
 
 ![SecureScan Logo](assets/icon-16x16.svg)
 
-A comprehensive penetration testing toolkit with AI-powered vulnerability detection, automated reconnaissance, and professional reporting capabilities.
+A comprehensive, portable penetration testing toolkit with automated reconnaissance, vulnerability assessment, and secure reporting capabilities.
 
 ## Features
 
 ### 🎯 **Core Modules**
-- **Reconnaissance**: Port scanning, service enumeration, subdomain discovery
-- **Vulnerability Assessment**: CVE scanning, security checks, configuration analysis
-- **AI-Powered Detection**: Machine learning models for advanced threat identification
-- **Professional Reporting**: JSON reports, markdown summaries, and executive dashboards
+- **Reconnaissance**: Port scanning, service enumeration, DNS lookup
+- **Vulnerability Assessment**: Security rule-based scanning and analysis  
+- **Pattern Analysis**: Rule-based vulnerability detection with MITRE ATT&CK mapping
+- **Secure Reporting**: Ghost mode (memory-only) or file-based reports
 
-### 🤖 **AI/ML Capabilities**
-- **VulnClassifier-v2.1**: Neural network-based vulnerability classification
-- **AnomalyDetector-v1.3**: Behavioral pattern analysis for anomaly detection
-- **ThreatPredictor-v3.0**: Risk assessment and threat scoring algorithms
-- **Fuzzy Pattern Matching**: Advanced heuristic analysis for zero-day detection
+### 🛡️ **Security Features**
+- **Ghost Mode**: No file artifacts left on target systems (default)
+- **Portable Execution**: Runs from USB without installation
+- **Input Validation**: Protection against command injection
+- **Memory Security**: Secure allocation with automatic cleanup
+- **Anti-Forensics**: Complete trace elimination
 
 ### 📊 **Reporting Features**
 - Target-specific timestamped reports
-- AI analysis sections with confidence scores
+- Rule-based analysis with severity scoring
 - Executive summaries with risk ratings
 - JSON and Markdown output formats
+- In-memory reports (ghost mode) or file output
 
 ## Installation
 
@@ -111,29 +113,30 @@ Reports are generated in the `reports/` directory with the following structure:
 
 Each report includes:
 - Reconnaissance results
-- Vulnerability findings
-- AI analysis with confidence scores
+- Vulnerability findings  
+- Rule-based analysis with severity scoring
 - Risk assessment and recommendations
 
-## AI Detection Models
+## Security Analysis
 
-The toolkit includes sophisticated ML algorithms:
+The toolkit uses rule-based vulnerability detection:
 
-1. **Neural Network Classifier**: 7-layer deep learning model for vulnerability pattern recognition
-2. **Bayesian Threat Assessment**: Statistical analysis for threat probability calculation
-3. **Fuzzy Logic Engine**: Heuristic analysis for unknown attack patterns
-4. **Anomaly Detection**: Behavioral analysis for identifying suspicious activities
+1. **Rule Engine**: Pattern matching against known vulnerability signatures
+2. **CVE Database**: Cross-reference findings with known vulnerabilities  
+3. **MITRE ATT&CK**: Map findings to attack techniques and tactics
+4. **Severity Scoring**: Risk-based classification of security issues
 
 ## Contributing
 
 This project follows best practices for penetration testing tools:
 - **Ethical Use Only**: For authorized testing and security research
-- **Modular Design**: Easy to extend with new detection modules
+- **Open Source**: Full transparency and community contributions welcome
+- **Modular Design**: Easy to extend with new detection rules
 - **Professional Standards**: Clean code, comprehensive documentation
 
 ## License
 
-This project is intended for educational and authorized security testing purposes only.
+This project is open source and intended for educational and authorized security testing purposes only.
 
 ## Executables
 
