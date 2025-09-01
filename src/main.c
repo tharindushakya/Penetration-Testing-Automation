@@ -42,10 +42,10 @@ static void run_full(const char *target) {
         return;
     }
     
-    // Add AI/ML analysis
+    // Add mathematical vulnerability analysis
     module_result_t *ai_results=NULL; size_t ai_count=0;
     if(run_ai_analysis(target, "scan_data", &ai_results, &ai_count)!=0) {
-        fprintf(stderr, "[!] AI analysis failed\n");
+        fprintf(stderr, "[!] Mathematical analysis failed\n");
     }
     
     size_t total = recon_count + vuln_count + ai_count;
@@ -150,7 +150,7 @@ int main(int argc, char **argv) {
     printf("=============================================\n");
     for(;;) {
         printf("\nTarget: %s\n", target);
-        printf("[1] Recon only\n[2] Vulnerability scan only\n[3] AI/ML Analysis\n[4] Full workflow (recon+vuln+AI+report)\n[5] Change target\n[0] Exit\n> ");
+        printf("[1] Recon only\n[2] Vulnerability scan only\n[3] Mathematical Analysis\n[4] Full workflow (recon+vuln+math+report)\n[5] Change target\n[0] Exit\n> ");
         fflush(stdout);
         int choice=-1; if(scanf("%d", &choice)!=1) { break; }
         if(choice==0) break;
