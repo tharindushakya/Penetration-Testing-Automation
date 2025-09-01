@@ -12,4 +12,3 @@ Branches
 - `main`: stable snapshots
 - `dev`: active development
 
-(No guides per request.)
