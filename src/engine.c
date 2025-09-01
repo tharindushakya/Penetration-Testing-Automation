@@ -123,7 +123,7 @@ int run_vuln(const char *target, module_result_t **out_results, size_t *out_coun
 }
 
 int run_ai_analysis(const char *target, const char *scan_data, module_result_t **out_results, size_t *out_count) {
-    printf("[VULN-DB] Initializing mathematical vulnerability detection engine...\n");
+    printf("[HYBRID] Initializing hybrid vulnerability detection engine...\n");
     init_vulnerability_detector();
     
     // Get actual banner data from reconnaissance
@@ -139,77 +139,95 @@ int run_ai_analysis(const char *target, const char *scan_data, module_result_t *
         http_banner, 
         ssh_banner);
     
-    printf("[VULN-DB] Analyzing collected data: %zu bytes\n", strlen(combined_data));
-    printf("[VULN-DB] Data sample: %.100s...\n", combined_data);
+    printf("[HYBRID] Analyzing collected data: %zu bytes\n", strlen(combined_data));
+    printf("[HYBRID] Data sample: %.100s...\n", combined_data);
     
-    vuln_detection_t *vuln_detections = NULL;
-    size_t vuln_count = 0;
+    // Run hybrid detection (combines rule-based + CVE + research)
+    hybrid_detection_t *hybrid_detections = NULL;
+    size_t hybrid_count = 0;
+    
+    int hybrid_result = run_hybrid_detection(combined_data, &hybrid_detections, &hybrid_count);
+    printf("[HYBRID] Detection completed with %zu findings (status: %d)\n", hybrid_count, hybrid_result);
+    
+    if (hybrid_result == 0 && hybrid_count > 0) {
+        printf("[HYBRID] --- Research-Enhanced Detection Results ---\n");
+        for (size_t i = 0; i < hybrid_count; i++) {
+            printf("[HYBRID] Finding #%zu:\n", i+1);
+            printf("  - Vulnerability: %s\n", hybrid_detections[i].detection_id);
+            printf("  - Confidence: %.2f%%\n", hybrid_detections[i].confidence_score * 100);
+            printf("  - Graph Neural Score: %.4f\n", hybrid_detections[i].graph_neural_score);
+            printf("  - Transformer Score: %.4f\n", hybrid_detections[i].transformer_score);
+            printf("  - Ensemble Score: %.4f\n", hybrid_detections[i].ensemble_score);
+            printf("  - Explainability: %.4f\n", hybrid_detections[i].explainability_score);
+            printf("  - Description: %s\n", hybrid_detections[i].description);
+            printf("  - Detection Type: %s\n", hybrid_detections[i].detection_type);
+        }
+        printf("[HYBRID] --- End Results ---\n");
+    }
     
     vuln_detection_t *network_detections = NULL;
     size_t network_count = 0;
     
-    vuln_detection_t *anomaly_detections = NULL;
-    size_t anomaly_count = 0;
+    // Run additional network analysis (complementary to hybrid detection)
+    int network_result = analyze_network_vulnerability(combined_data, &network_detections, &network_count);
+    printf("[NETWORK] Additional network analysis completed with %zu detections (status: %d)\n", network_count, network_result);
     
-    // Run mathematical vulnerability analysis modules
-    run_vulnerability_detection(combined_data, &vuln_detections, &vuln_count);
-    analyze_network_patterns("22/tcp open ssh;80/tcp open http", &network_detections, &network_count);
-    detect_service_anomalies(combined_data, &anomaly_detections, &anomaly_count);
-    
-    // Convert vulnerability detections to module results
-    size_t total_detections = vuln_count + network_count + anomaly_count;
+    // Convert detections to module results
+    size_t total_detections = hybrid_count + network_count;
     module_result_t *results = calloc(total_detections, sizeof(module_result_t));
-    if(!results) return -1;
+    if(!results) {
+        if (hybrid_detections) free(hybrid_detections);
+        if (network_detections) free(network_detections);
+        cleanup_vulnerability_detector();
+        return -1;
+    }
     
     size_t idx = 0;
     
-    // Add mathematical vulnerability detections
-    for(size_t i = 0; i < vuln_count; i++, idx++) {
+    // Add hybrid detection results (rule-based + CVE + research)
+    for(size_t i = 0; i < hybrid_count; i++, idx++) {
         results[idx].type = MODULE_AI;
-        results[idx].name = strdup(vuln_detections[i].vulnerability_id);
+        results[idx].name = strdup(hybrid_detections[i].detection_id);
         
-        char vuln_data[1024];
-        snprintf(vuln_data, sizeof(vuln_data), 
-            "[CVSS] Risk Score: %.2f | Confidence: %.3f | Method: %s | Details: %s",
-            vuln_detections[i].risk_score,
-            vuln_detections[i].confidence_score,
-            vuln_detections[i].detection_method,
-            vuln_detections[i].remediation_advice);
-        results[idx].data = strdup(vuln_data);
+        char hybrid_data[1024];
+        snprintf(hybrid_data, sizeof(hybrid_data), 
+            "[HYBRID] CVSS: %.2f | Graph: %.3f | Transformer: %.3f | Ensemble: %.3f | Explainability: %.3f | Type: %s | Details: %s",
+            hybrid_detections[i].risk_score,
+            hybrid_detections[i].graph_neural_score,
+            hybrid_detections[i].transformer_score,
+            hybrid_detections[i].ensemble_score,
+            hybrid_detections[i].explainability_score,
+            hybrid_detections[i].detection_type,
+            hybrid_detections[i].description);
+        results[idx].data = strdup(hybrid_data);
     }
     
-    // Add network pattern detections
+    // Add additional network detections
     for(size_t i = 0; i < network_count; i++, idx++) {
         results[idx].type = MODULE_AI;
         results[idx].name = strdup(network_detections[i].vulnerability_id);
         
         char net_data[1024];
         snprintf(net_data, sizeof(net_data), 
-            "[NET] Pattern Score: %.3f | Method: %s | Analysis: %s",
+            "[NETWORK] CVSS: %.2f | Confidence: %.3f | Details: %s",
+            network_detections[i].risk_score,
             network_detections[i].confidence_score,
-            network_detections[i].detection_method,
             network_detections[i].remediation_advice);
         results[idx].data = strdup(net_data);
     }
     
-    // Add anomaly detections
-    for(size_t i = 0; i < anomaly_count; i++, idx++) {
-        results[idx].type = MODULE_AI;
-        results[idx].name = strdup(anomaly_detections[i].vulnerability_id);
-        
-        char anom_data[1024];
-        snprintf(anom_data, sizeof(anom_data), 
-            "[ANOM] Anomaly Score: %.3f | Method: %s | Analysis: %s",
-            anomaly_detections[i].confidence_score,
-            anomaly_detections[i].detection_method,
-            anomaly_detections[i].remediation_advice);
-        results[idx].data = strdup(anom_data);
-    }
+    printf("[ENGINE] Hybrid vulnerability analysis complete. Found %zu total detections (Hybrid: %zu, Network: %zu)\n", 
+           total_detections, hybrid_count, network_count);
     
-    printf("[VULN-DB] Mathematical vulnerability analysis complete. Found %zu insights\n", total_detections);
+    // Clean up
+    if (hybrid_detections) free(hybrid_detections);
+    if (network_detections) free(network_detections);
+    cleanup_vulnerability_detector();
     
     *out_results = results;
     *out_count = total_detections;
+    
+    return 0;
     
     return 0;
 }
