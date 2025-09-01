@@ -13,14 +13,41 @@ static const struct {
     double confidence;
     const char *reasoning;
 } vulnerability_signatures[] = {
-    {"Apache/2.4.[0-4][0-9]", "CVE-2021-44228", 0.85, "Log4j vulnerability pattern detected in Apache version"},
-    {"OpenSSH_[1-7]\\.", "SSH_BRUTEFORCE_RISK", 0.72, "Older SSH version susceptible to brute force attacks"},
-    {"PHP/[5-7]\\.[0-6]", "PHP_RCE_RISK", 0.68, "Legacy PHP version with known RCE vulnerabilities"},
-    {"IIS/[7-9]\\.", "IIS_HEADER_INJECTION", 0.61, "IIS version vulnerable to header injection attacks"},
-    {"nginx/1\\.[0-1][0-9]", "NGINX_REQUEST_SMUGGLING", 0.74, "Nginx version susceptible to HTTP request smuggling"},
-    {"Server: Microsoft", "MS_INFO_DISCLOSURE", 0.45, "Microsoft server header reveals stack information"},
-    {"X-Powered-By:", "FRAMEWORK_DISCLOSURE", 0.58, "Technology stack disclosure increases attack surface"},
-    {"Connection: keep-alive", "DOS_VECTOR", 0.35, "Keep-alive connections can be exploited for DoS attacks"}
+    // Web Server Vulnerabilities
+    {"Apache/2.4.41", "CVE-2021-44228", 0.95, "Apache 2.4.41 vulnerable to Log4j RCE (Log4Shell)"},
+    {"Apache/2.4.29", "CVE-2019-0211", 0.87, "Apache 2.4.29 privilege escalation vulnerability"},
+    {"Apache/2.4.[0-4][0-9]", "APACHE_OUTDATED", 0.75, "Outdated Apache version with multiple known CVEs"},
+    
+    // PHP Vulnerabilities  
+    {"PHP/7.4.3", "CVE-2020-7071", 0.82, "PHP 7.4.3 URL rewriter session vulnerability"},
+    {"PHP/5.6.40", "CVE-2019-11048", 0.91, "PHP 5.6.40 multiple critical vulnerabilities"},
+    {"PHP/[5-7]\\.[0-6]", "PHP_EOL_VERSION", 0.68, "End-of-life PHP version with security risks"},
+    
+    // SSH Vulnerabilities
+    {"OpenSSH_7.6p1", "CVE-2018-15473", 0.79, "OpenSSH 7.6p1 user enumeration vulnerability"},
+    {"OpenSSH_8.0", "CVE-2019-6109", 0.71, "OpenSSH 8.0 missing character encoding"},
+    {"OpenSSH_6.7p1", "CVE-2016-0777", 0.94, "OpenSSH 6.7p1 information disclosure vulnerability"},
+    {"libssh_0.8.7", "CVE-2018-10933", 0.88, "libssh 0.8.7 authentication bypass"},
+    
+    // Web Framework Headers
+    {"nginx/1.18.0", "NGINX_CONFIG_RISK", 0.65, "Nginx version requires security hardening review"},
+    {"Microsoft-IIS/8.5", "IIS_DISCLOSURE", 0.72, "IIS 8.5 information disclosure through headers"},
+    {"X-Powered-By: PHP", "PHP_HEADER_DISCLOSURE", 0.58, "PHP version disclosure increases attack surface"},
+    {"X-Powered-By: Express", "EXPRESS_DISCLOSURE", 0.55, "Express framework disclosure"},
+    {"X-Powered-By: ASP.NET", "ASPNET_DISCLOSURE", 0.61, "ASP.NET framework version disclosure"},
+    
+    // Service Detection
+    {"Server: nginx", "NGINX_DETECTED", 0.45, "Nginx web server detected - requires security review"},
+    {"Server: Apache", "APACHE_DETECTED", 0.43, "Apache web server detected - version analysis needed"},
+    {"Server: Microsoft", "MS_IIS_DETECTED", 0.47, "Microsoft IIS detected - security assessment required"},
+    
+    // FTP Vulnerabilities
+    {"vsFTPd 3.0.3", "VSFTPD_BACKDOOR_RISK", 0.73, "vsFTPd 3.0.3 potential backdoor concerns"},
+    
+    // Network Service Patterns
+    {"Connection: keep-alive", "DOS_VECTOR", 0.35, "Keep-alive connections can be exploited for DoS attacks"},
+    {"21/tcp open ftp", "FTP_SERVICE_RISK", 0.62, "FTP service detected - often misconfigured"},
+    {"25/tcp open smtp", "SMTP_SERVICE_RISK", 0.58, "SMTP service detected - relay misconfiguration risk"}
 };
 
 // Advanced pattern matching with confidence scoring
