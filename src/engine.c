@@ -43,7 +43,7 @@ int run_vuln(const char *target, module_result_t **out_results, size_t *out_coun
 int run_ai_analysis(const char *target, const char *scan_data, module_result_t **out_results, size_t *out_count) {
     (void)target;
     
-    printf("[AI] 🚀 Initializing AI/ML vulnerability detection engine...\n");
+    printf("[AI] Initializing AI/ML vulnerability detection engine...\n");
     init_ai_detector();
     
     // Combine all scan data for AI analysis
@@ -80,7 +80,7 @@ int run_ai_analysis(const char *target, const char *scan_data, module_result_t *
         
         char ai_data[1024];
         snprintf(ai_data, sizeof(ai_data), 
-            "🤖 AI Confidence: %.2f | Reasoning: %s | Action: %s",
+            "[AI] AI Confidence: %.2f | Reasoning: %s | Action: %s",
             ai_detections[i].confidence_score,
             ai_detections[i].ai_reasoning,
             ai_detections[i].recommended_action);
@@ -94,7 +94,7 @@ int run_ai_analysis(const char *target, const char *scan_data, module_result_t *
         
         char ai_data[1024];
         snprintf(ai_data, sizeof(ai_data), 
-            "🌐 ML Pattern: %.2f | Reasoning: %s | Action: %s",
+            "[NET] ML Pattern: %.2f | Reasoning: %s | Action: %s",
             network_detections[i].confidence_score,
             network_detections[i].ai_reasoning,
             network_detections[i].recommended_action);
@@ -108,7 +108,7 @@ int run_ai_analysis(const char *target, const char *scan_data, module_result_t *
         
         char ai_data[1024];
         snprintf(ai_data, sizeof(ai_data), 
-            "🧠 Anomaly Score: %.2f | Reasoning: %s | Action: %s",
+            "[ANOM] Anomaly Score: %.2f | Reasoning: %s | Action: %s",
             anomaly_detections[i].confidence_score,
             anomaly_detections[i].ai_reasoning,
             anomaly_detections[i].recommended_action);
@@ -123,7 +123,7 @@ int run_ai_analysis(const char *target, const char *scan_data, module_result_t *
     free_ai_detections(network_detections, network_count);
     free_ai_detections(anomaly_detections, anomaly_count);
     
-    printf("[AI] ✅ AI analysis complete. Found %zu ML-powered insights\n", total_detections);
+    printf("[AI] AI analysis complete. Found %zu ML-powered insights\n", total_detections);
     
     *out_results = results;
     *out_count = total_detections;

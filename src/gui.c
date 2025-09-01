@@ -26,44 +26,11 @@ void ensure_reports_dir(void) {
 }
 
 void update_results_display(const char* text) {
-    // Simple and safe text conversion - avoid complex emoji replacement
-    char formatted_text[8192];
-    const char* src = text;
-    char* dst = formatted_text;
-    
-    while(*src && (dst - formatted_text) < sizeof(formatted_text) - 10) {
-        // Simple emoji to text replacement - safer approach
-        if(strncmp(src, "🔍", 4) == 0) {
-            strcpy(dst, "[RECON] ");
-            dst += 8;
-            src += 4;
-        } else if(strncmp(src, "🛡️", 7) == 0) {
-            strcpy(dst, "[VULN]  ");
-            dst += 8;
-            src += 7;
-        } else if(strncmp(src, "🤖", 4) == 0) {
-            strcpy(dst, "[AI]    ");
-            dst += 8;
-            src += 4;
-        } else if(strncmp(src, "✅", 3) == 0) {
-            strcpy(dst, "[OK]    ");
-            dst += 8;
-            src += 3;
-        } else if(strncmp(src, "❌", 3) == 0) {
-            strcpy(dst, "[FAIL]  ");
-            dst += 8;
-            src += 3;
-        } else {
-            *dst++ = *src++;
-        }
-    }
-    *dst = '\0';
-    
-    // Convert to wide char and display
-    int len = MultiByteToWideChar(CP_UTF8, 0, formatted_text, -1, NULL, 0);
+    // Simple text display - no emoji replacement needed since we removed all emojis
+    int len = MultiByteToWideChar(CP_UTF8, 0, text, -1, NULL, 0);
     wchar_t* wtext = malloc(len * sizeof(wchar_t));
     if(wtext) {
-        MultiByteToWideChar(CP_UTF8, 0, formatted_text, -1, wtext, len);
+        MultiByteToWideChar(CP_UTF8, 0, text, -1, wtext, len);
         SetWindowTextW(hResultsEdit, wtext);
         free(wtext);
     }
@@ -104,17 +71,17 @@ void run_scan_module(int module_type, const char* target) {
     switch(module_type) {
         case 1: // Recon
             rc = run_recon(target, &results, &count);
-            strcat(result_text, "🔍 RECONNAISSANCE RESULTS\r\n");
+            strcat(result_text, "[RECON] RECONNAISSANCE RESULTS\r\n");
             strcat(result_text, "================================\r\n\r\n");
             break;
         case 2: // Vuln
             rc = run_vuln(target, &results, &count);
-            strcat(result_text, "🛡️ VULNERABILITY SCAN RESULTS\r\n");
+            strcat(result_text, "[VULN] VULNERABILITY SCAN RESULTS\r\n");
             strcat(result_text, "================================\r\n\r\n");
             break;
         case 3: // AI
             rc = run_ai_analysis(target, "scan_data", &results, &count);
-            strcat(result_text, "🤖 AI/ML ANALYSIS RESULTS\r\n");
+            strcat(result_text, "[AI] AI/ML ANALYSIS RESULTS\r\n");
             strcat(result_text, "================================\r\n\r\n");
             break;
         case 4: // Full
@@ -136,7 +103,7 @@ void run_scan_module(int module_type, const char* target) {
                     
                     ensure_reports_dir();
                     run_report(results, count, target);
-                    strcat(result_text, "✅ FULL WORKFLOW WITH AI COMPLETED\r\n");
+                    strcat(result_text, "[OK] FULL WORKFLOW WITH AI COMPLETED\r\n");
                     strcat(result_text, "====================================\r\n\r\n");
                     strcat(result_text, "Report generated successfully!\r\n");
                     strcat(result_text, "Check the reports list below for details.\r\n\r\n");
@@ -171,7 +138,7 @@ void run_scan_module(int module_type, const char* target) {
         }
         free_results(results, count);
     } else if(rc != 0) {
-        strcat(result_text, "❌ SCAN FAILED\r\n");
+        strcat(result_text, "[FAIL] SCAN FAILED\r\n");
         strcat(result_text, "================\r\n\r\n");
         strcat(result_text, "Please check your target and try again.\r\n");
     }

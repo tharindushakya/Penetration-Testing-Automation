@@ -89,7 +89,7 @@ int main(int argc, char **argv) {
     printf("=============================================\n");
     for(;;) {
         printf("\nTarget: %s\n", target);
-        printf("[1] Recon only\n[2] Vulnerability scan only\n[3] 🤖 AI/ML Analysis\n[4] Full workflow (recon+vuln+AI+report)\n[5] Change target\n[0] Exit\n> ");
+        printf("[1] Recon only\n[2] Vulnerability scan only\n[3] AI/ML Analysis\n[4] Full workflow (recon+vuln+AI+report)\n[5] Change target\n[0] Exit\n> ");
         fflush(stdout);
         int choice=-1; if(scanf("%d", &choice)!=1) { break; }
         if(choice==0) break;

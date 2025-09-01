@@ -21,7 +21,7 @@ static const char* severity_to_emoji(int severity) {
         case 2: return "🟡";
         case 3: return "🟠";
         case 4: return "🔴";
-        case 5: return "⚠️";
+        case 5: return "!";
         default: return "❓";
     }
 }
@@ -65,7 +65,7 @@ int generate_summary_report(module_result_t *all_results, size_t count, const ch
     FILE *summary_file = fopen(summary_path, "w");
     if(!summary_file) return -1;
     
-    fprintf(summary_file, "# 📊 Penetration Test Results Summary\n\n");
+    fprintf(summary_file, "# Penetration Test Results Summary\n\n");
     fprintf(summary_file, "**Target:** %s  \n", target);
     fprintf(summary_file, "**Scan Time:** %s  \n", timestamp);
     fprintf(summary_file, "**Total Findings:** %zu\n\n", count);

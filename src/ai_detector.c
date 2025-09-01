@@ -92,9 +92,9 @@ int init_ai_detector(void) {
     threat_predictor.model_name = strdup("ThreatPredictor-v3.0");
     threat_predictor.confidence_threshold = 0.75;
     
-    printf("[AI] ✅ ML models loaded successfully\n");
-    printf("[AI] 🧠 Neural networks initialized for pattern recognition\n");
-    printf("[AI] 📊 Bayesian threat assessment engine ready\n");
+    printf("[AI] ML models loaded successfully\n");
+    printf("[AI] Neural networks initialized for pattern recognition\n");
+    printf("[AI] Bayesian threat assessment engine ready\n");
     
     return 0;
 }
@@ -102,7 +102,7 @@ int init_ai_detector(void) {
 int run_ai_detection(const char *target_data, ai_detection_t **detections, size_t *detection_count) {
     if(!target_data || !detections || !detection_count) return -1;
     
-    printf("[AI] 🔍 Running AI-powered vulnerability analysis...\n");
+    printf("[AI] Running AI-powered vulnerability analysis...\n");
     
     size_t max_detections = sizeof(ai_signatures) / sizeof(ai_signatures[0]);
     ai_detection_t *results = calloc(max_detections, sizeof(ai_detection_t));
@@ -127,13 +127,13 @@ int run_ai_detection(const char *target_data, ai_detection_t **detections, size_
             char recommendation[512];
             if(final_confidence > 0.8) {
                 snprintf(recommendation, sizeof(recommendation), 
-                    "🚨 CRITICAL: Immediate patching required. Risk score: %.2f/1.0", final_confidence);
+                    "[CRITICAL] Immediate patching required. Risk score: %.2f/1.0", final_confidence);
             } else if(final_confidence > 0.6) {
                 snprintf(recommendation, sizeof(recommendation), 
-                    "⚠️ HIGH: Schedule security update. Risk score: %.2f/1.0", final_confidence);
+                    "[HIGH] Schedule security update. Risk score: %.2f/1.0", final_confidence);
             } else {
                 snprintf(recommendation, sizeof(recommendation), 
-                    "📋 MEDIUM: Monitor and assess. Risk score: %.2f/1.0", final_confidence);
+                    "[MEDIUM] Monitor and assess. Risk score: %.2f/1.0", final_confidence);
             }
             results[found].recommended_action = strdup(recommendation);
             
@@ -141,7 +141,7 @@ int run_ai_detection(const char *target_data, ai_detection_t **detections, size_
         }
     }
     
-    printf("[AI] 🎯 Identified %zu potential threats using ML analysis\n", found);
+    printf("[AI] Identified %zu potential threats using ML analysis\n", found);
     *detections = results;
     *detection_count = found;
     
@@ -149,7 +149,7 @@ int run_ai_detection(const char *target_data, ai_detection_t **detections, size_
 }
 
 int analyze_network_patterns(const char *scan_data, ai_detection_t **detections, size_t *detection_count) {
-    printf("[AI] 🌐 Analyzing network patterns with deep learning...\n");
+    printf("[AI] Analyzing network patterns with deep learning...\n");
     
     ai_detection_t *results = calloc(3, sizeof(ai_detection_t));
     if(!results) return -1;
@@ -161,7 +161,7 @@ int analyze_network_patterns(const char *scan_data, ai_detection_t **detections,
         results[found].vulnerability_type = strdup("STANDARD_WEB_STACK");
         results[found].confidence_score = 0.82;
         results[found].ai_reasoning = strdup("ML detected standard web server configuration - common attack target");
-        results[found].recommended_action = strdup("🛡️ Implement WAF and rate limiting");
+        results[found].recommended_action = strdup("Implement WAF and rate limiting");
         found++;
     }
     
@@ -170,11 +170,11 @@ int analyze_network_patterns(const char *scan_data, ai_detection_t **detections,
         results[found].vulnerability_type = strdup("SSH_HTTP_COMBO");
         results[found].confidence_score = 0.65;
         results[found].ai_reasoning = strdup("AI identified SSH+HTTP combination - potential lateral movement risk");
-        results[found].recommended_action = strdup("🔐 Strengthen SSH key management and monitoring");
+        results[found].recommended_action = strdup("Strengthen SSH key management and monitoring");
         found++;
     }
     
-    printf("[AI] 📈 Network pattern analysis complete. Found %zu insights\n", found);
+    printf("[AI] Network pattern analysis complete. Found %zu insights\n", found);
     *detections = results;
     *detection_count = found;
     
@@ -182,7 +182,7 @@ int analyze_network_patterns(const char *scan_data, ai_detection_t **detections,
 }
 
 int detect_service_anomalies(const char *service_banners, ai_detection_t **detections, size_t *detection_count) {
-    printf("[AI] 🤖 Running behavioral anomaly detection...\n");
+    printf("[AI] Running behavioral anomaly detection...\n");
     
     ai_detection_t *results = calloc(2, sizeof(ai_detection_t));
     if(!results) return -1;
@@ -197,7 +197,7 @@ int detect_service_anomalies(const char *service_banners, ai_detection_t **detec
         results[found].vulnerability_type = strdup("BEHAVIORAL_ANOMALY");
         results[found].confidence_score = anomaly_score;
         results[found].ai_reasoning = strdup("Statistical model detected unusual service behavior patterns");
-        results[found].recommended_action = strdup("📊 Deploy SIEM monitoring for behavioral analysis");
+        results[found].recommended_action = strdup("Deploy SIEM monitoring for behavioral analysis");
         found++;
     }
     
@@ -206,11 +206,11 @@ int detect_service_anomalies(const char *service_banners, ai_detection_t **detec
         results[found].vulnerability_type = strdup("HEADER_FINGERPRINTING");
         results[found].confidence_score = 0.71;
         results[found].ai_reasoning = strdup("ML detected excessive server header disclosure - fingerprinting risk");
-        results[found].recommended_action = strdup("🔒 Configure header filtering and obfuscation");
+        results[found].recommended_action = strdup("Configure header filtering and obfuscation");
         found++;
     }
     
-    printf("[AI] 🧠 Anomaly detection found %zu behavioral patterns\n", found);
+    printf("[AI] Anomaly detection found %zu behavioral patterns\n", found);
     *detections = results;
     *detection_count = found;
     
@@ -231,10 +231,10 @@ void free_ai_detections(ai_detection_t *detections, size_t count) {
 int update_threat_models(const char *threat_feed_data) {
     (void)threat_feed_data; // Unused in simulation
     
-    printf("[AI] 📡 Updating ML models with latest threat intelligence...\n");
-    printf("[AI] 🔄 Processing MITRE ATT&CK framework updates...\n");
-    printf("[AI] ⚡ Neural network weights updated with new IOCs\n");
-    printf("[AI] ✅ Threat models synchronized\n");
+    printf("[AI] Updating ML models with latest threat intelligence...\n");
+    printf("[AI] Processing MITRE ATT&CK framework updates...\n");
+    printf("[AI] Neural network weights updated with new IOCs\n");
+    printf("[AI] Threat models synchronized\n");
     
     return 0;
 }
