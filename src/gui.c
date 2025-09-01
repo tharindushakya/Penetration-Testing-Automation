@@ -13,48 +13,72 @@
 #define ID_FULL_BTN 1005
 #define ID_RESULTS_EDIT 1006
 #define ID_REPORTS_LIST 1007
+#define ID_PIN_BTN 1008
 
 HWND hTargetEdit, hResultsEdit, hReportsList;
+HWND hTargetLabel, hResultsLabel, hReportsLabel, hPinBtn;  // Add pin button
 HINSTANCE hInst;
 HFONT hFont, hBoldFont;
+BOOL isPinned = FALSE;
 
 void ensure_reports_dir(void) {
     CreateDirectoryA("reports", NULL);
 }
 
 void update_results_display(const char* text) {
-    // Clean and format the text for better readability
+    // Simple and safe text conversion - avoid complex emoji replacement
     char formatted_text[8192];
-    strcpy(formatted_text, text);
+    const char* src = text;
+    char* dst = formatted_text;
     
-    // Replace emojis with cleaner text indicators for better Windows display
-    char *pos;
-    while((pos = strstr(formatted_text, "🔍")) != NULL) {
-        memcpy(pos, "[RECON]", 7);
-        memmove(pos + 7, pos + 4, strlen(pos + 4) + 1); // 4 bytes for emoji
+    while(*src && (dst - formatted_text) < sizeof(formatted_text) - 10) {
+        // Simple emoji to text replacement - safer approach
+        if(strncmp(src, "🔍", 4) == 0) {
+            strcpy(dst, "[RECON] ");
+            dst += 8;
+            src += 4;
+        } else if(strncmp(src, "🛡️", 7) == 0) {
+            strcpy(dst, "[VULN]  ");
+            dst += 8;
+            src += 7;
+        } else if(strncmp(src, "🤖", 4) == 0) {
+            strcpy(dst, "[AI]    ");
+            dst += 8;
+            src += 4;
+        } else if(strncmp(src, "✅", 3) == 0) {
+            strcpy(dst, "[OK]    ");
+            dst += 8;
+            src += 3;
+        } else if(strncmp(src, "❌", 3) == 0) {
+            strcpy(dst, "[FAIL]  ");
+            dst += 8;
+            src += 3;
+        } else {
+            *dst++ = *src++;
+        }
     }
-    while((pos = strstr(formatted_text, "🛡️")) != NULL) {
-        memcpy(pos, "[VULN] ", 7);
-        memmove(pos + 7, pos + 7, strlen(pos + 7) + 1); // Skip the second emoji byte
-    }
-    while((pos = strstr(formatted_text, "🤖")) != NULL) {
-        memcpy(pos, "[AI]   ", 7);
-        memmove(pos + 7, pos + 4, strlen(pos + 4) + 1);
-    }
-    while((pos = strstr(formatted_text, "✅")) != NULL) {
-        memcpy(pos, "[OK]   ", 7);
-        memmove(pos + 7, pos + 4, strlen(pos + 4) + 1);
-    }
-    while((pos = strstr(formatted_text, "❌")) != NULL) {
-        memcpy(pos, "[FAIL] ", 7);
-        memmove(pos + 7, pos + 4, strlen(pos + 4) + 1);
-    }
+    *dst = '\0';
     
+    // Convert to wide char and display
     int len = MultiByteToWideChar(CP_UTF8, 0, formatted_text, -1, NULL, 0);
     wchar_t* wtext = malloc(len * sizeof(wchar_t));
-    MultiByteToWideChar(CP_UTF8, 0, formatted_text, -1, wtext, len);
-    SetWindowTextW(hResultsEdit, wtext);
-    free(wtext);
+    if(wtext) {
+        MultiByteToWideChar(CP_UTF8, 0, formatted_text, -1, wtext, len);
+        SetWindowTextW(hResultsEdit, wtext);
+        free(wtext);
+    }
+}
+
+void toggle_pin_window(HWND hwnd) {
+    isPinned = !isPinned;
+    
+    if(isPinned) {
+        SetWindowPos(hwnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE);
+        SetWindowTextW(hPinBtn, L"Unpin");
+    } else {
+        SetWindowPos(hwnd, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE);
+        SetWindowTextW(hPinBtn, L"Pin");
+    }
 }
 
 void refresh_reports_list(void) {
@@ -159,9 +183,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     switch(msg) {
         case WM_CREATE:
             {
-                // Create improved fonts
+                // Create improved fonts - smaller for compact GUI
                 hFont = CreateFont(
-                    -14,                        // Height
+                    -12,                        // Smaller height for compact design
                     0,                          // Width
                     0,                          // Escapement
                     0,                          // Orientation
@@ -174,47 +198,65 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     CLIP_DEFAULT_PRECIS,        // ClipPrecision
                     CLEARTYPE_QUALITY,          // Quality
                     DEFAULT_PITCH | FF_MODERN,  // Pitch and Family
-                    "Consolas"                  // Font name
+                    "Segoe UI"                  // More compact font
                 );
                 
                 hBoldFont = CreateFont(
-                    -14, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE,
+                    -12, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE,
                     ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
-                    CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_MODERN, "Consolas"
+                    CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_MODERN, "Segoe UI"
                 );
                 
-                // Target input
-                CreateWindowW(L"STATIC", L"Target:", WS_VISIBLE | WS_CHILD,
-                             10, 10, 60, 20, hwnd, NULL, hInst, NULL);
+                // Target input with pin button
+                hTargetLabel = CreateWindowW(L"STATIC", L"Target:", WS_VISIBLE | WS_CHILD,
+                             10, 10, 45, 18, hwnd, NULL, hInst, NULL);
+                SendMessage(hTargetLabel, WM_SETFONT, (WPARAM)hBoldFont, TRUE);
+                
                 hTargetEdit = CreateWindowW(L"EDIT", L"example.com", 
                                           WS_VISIBLE | WS_CHILD | WS_BORDER,
-                                          80, 10, 200, 25, hwnd, (HMENU)ID_TARGET_EDIT, hInst, NULL);
+                                          60, 8, 140, 22, hwnd, (HMENU)ID_TARGET_EDIT, hInst, NULL);
                 SendMessage(hTargetEdit, WM_SETFONT, (WPARAM)hFont, TRUE);
                 
-                // Buttons
-                CreateWindowW(L"BUTTON", L"🔍 Recon", WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON,
-                             10, 50, 75, 30, hwnd, (HMENU)ID_RECON_BTN, hInst, NULL);
-                CreateWindowW(L"BUTTON", L"🛡️ Vuln Scan", WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON,
-                             95, 50, 75, 30, hwnd, (HMENU)ID_VULN_BTN, hInst, NULL);
-                CreateWindowW(L"BUTTON", L"🤖 AI Analysis", WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON,
-                             180, 50, 75, 30, hwnd, (HMENU)ID_AI_BTN, hInst, NULL);
-                CreateWindowW(L"BUTTON", L"⚡ Full+AI", WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON,
-                             265, 50, 75, 30, hwnd, (HMENU)ID_FULL_BTN, hInst, NULL);
+                // Pin button in top right
+                hPinBtn = CreateWindowW(L"BUTTON", L"Pin", WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON,
+                             310, 8, 40, 22, hwnd, (HMENU)ID_PIN_BTN, hInst, NULL);
+                SendMessage(hPinBtn, WM_SETFONT, (WPARAM)hFont, TRUE);
                 
-                // Results display
-                CreateWindowW(L"STATIC", L"Results:", WS_VISIBLE | WS_CHILD,
-                             10, 95, 60, 20, hwnd, NULL, hInst, NULL);
-                hResultsEdit = CreateWindowW(L"EDIT", L"Ready for AI-powered scanning...\r\n\r\nSelect a target and click a scan button to begin analysis.", 
+                // Buttons with compact sizes and simple text
+                HWND hReconBtn = CreateWindowW(L"BUTTON", L"Recon", WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON,
+                             10, 40, 60, 25, hwnd, (HMENU)ID_RECON_BTN, hInst, NULL);
+                SendMessage(hReconBtn, WM_SETFONT, (WPARAM)hFont, TRUE);
+                
+                HWND hVulnBtn = CreateWindowW(L"BUTTON", L"Vuln", WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON,
+                             80, 40, 60, 25, hwnd, (HMENU)ID_VULN_BTN, hInst, NULL);
+                SendMessage(hVulnBtn, WM_SETFONT, (WPARAM)hFont, TRUE);
+                
+                HWND hAiBtn = CreateWindowW(L"BUTTON", L"AI Scan", WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON,
+                             150, 40, 60, 25, hwnd, (HMENU)ID_AI_BTN, hInst, NULL);
+                SendMessage(hAiBtn, WM_SETFONT, (WPARAM)hFont, TRUE);
+                
+                HWND hFullBtn = CreateWindowW(L"BUTTON", L"Full+AI", WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON,
+                             220, 40, 70, 25, hwnd, (HMENU)ID_FULL_BTN, hInst, NULL);
+                SendMessage(hFullBtn, WM_SETFONT, (WPARAM)hFont, TRUE);
+                
+                // Results display - better fill
+                hResultsLabel = CreateWindowW(L"STATIC", L"Results:", WS_VISIBLE | WS_CHILD,
+                             10, 75, 55, 18, hwnd, NULL, hInst, NULL);
+                SendMessage(hResultsLabel, WM_SETFONT, (WPARAM)hBoldFont, TRUE);
+                
+                hResultsEdit = CreateWindowW(L"EDIT", L"Ready for scanning...\r\n\r\nSelect target and click scan button.", 
                                            WS_VISIBLE | WS_CHILD | WS_BORDER | WS_VSCROLL | ES_MULTILINE | ES_READONLY,
-                                           10, 120, 420, 200, hwnd, (HMENU)ID_RESULTS_EDIT, hInst, NULL);
+                                           10, 95, 350, 180, hwnd, (HMENU)ID_RESULTS_EDIT, hInst, NULL);
                 SendMessage(hResultsEdit, WM_SETFONT, (WPARAM)hFont, TRUE);
                 
-                // Reports list
-                CreateWindowW(L"STATIC", L"Generated Reports:", WS_VISIBLE | WS_CHILD,
-                             10, 335, 120, 20, hwnd, NULL, hInst, NULL);
+                // Reports list - better fill
+                hReportsLabel = CreateWindowW(L"STATIC", L"Reports:", WS_VISIBLE | WS_CHILD,
+                             10, 285, 60, 18, hwnd, NULL, hInst, NULL);
+                SendMessage(hReportsLabel, WM_SETFONT, (WPARAM)hBoldFont, TRUE);
+                
                 hReportsList = CreateWindowW(L"LISTBOX", NULL,
                                            WS_VISIBLE | WS_CHILD | WS_BORDER | WS_VSCROLL,
-                                           10, 360, 420, 100, hwnd, (HMENU)ID_REPORTS_LIST, hInst, NULL);
+                                           10, 305, 350, 100, hwnd, (HMENU)ID_REPORTS_LIST, hInst, NULL);
                 SendMessage(hReportsList, WM_SETFONT, (WPARAM)hFont, TRUE);
                 
                 ensure_reports_dir();
@@ -224,6 +266,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             
         case WM_COMMAND:
             switch(LOWORD(wParam)) {
+                case ID_PIN_BTN:
+                    toggle_pin_window(hwnd);
+                    break;
+                    
                 case ID_RECON_BTN:
                 case ID_VULN_BTN:
                 case ID_AI_BTN:
@@ -275,21 +321,25 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     
     hInst = hInstance;
     
-    WNDCLASSW wc = {0};
+    WNDCLASSEXW wc = {0};
+    wc.cbSize = sizeof(WNDCLASSEXW);
     wc.lpfnWndProc = WndProc;
     wc.hInstance = hInstance;
-    wc.lpszClassName = L"PenTestGUI";
+    wc.lpszClassName = L"SecureScanGUI";
     wc.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1);
     wc.hCursor = LoadCursor(NULL, IDC_ARROW);
+    wc.hIcon = LoadIcon(NULL, IDI_APPLICATION);  // Use application icon instead of shield
+    wc.hIconSm = LoadIcon(NULL, IDI_APPLICATION);  // Small icon for taskbar
     
-    if(!RegisterClassW(&wc)) {
+    if(!RegisterClassExW(&wc)) {
         MessageBoxW(NULL, L"Window registration failed!", L"Error", MB_ICONERROR);
         return 0;
     }
     
-    HWND hwnd = CreateWindowW(L"PenTestGUI", L"SecureScan Pro - Penetration Testing Suite",
-                             WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, CW_USEDEFAULT,
-                             460, 520, NULL, NULL, hInstance, NULL);
+    HWND hwnd = CreateWindowW(L"SecureScanGUI", L"SecureScan",
+                             WS_OVERLAPPEDWINDOW & ~WS_THICKFRAME & ~WS_MAXIMIZEBOX,
+                             CW_USEDEFAULT, CW_USEDEFAULT,
+                             380, 450, NULL, NULL, hInstance, NULL);
     
     if(!hwnd) {
         MessageBoxW(NULL, L"Window creation failed!", L"Error", MB_ICONERROR);
