@@ -39,10 +39,8 @@ static void run_full(const char *target) {
     for(size_t j=0;j<vuln_count;j++) all[recon_count+j]=vuln[j];
     free(recon); free(vuln);
     ensure_reports_dir();
-    if(run_report(all, total, "reports/report.json")!=0) {
+    if(run_report(all, total, target) != 0) {
         fprintf(stderr, "[!] Report generation failed\n");
-    } else {
-        printf("[+] Report written to reports/report.json (target=%s)\n", target);
     }
     free_results(all, total);
 }

@@ -1,5 +1,6 @@
 #include "engine.h"
 #include "ruleset.h"
+#include "report.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -38,23 +39,8 @@ int run_vuln(const char *target, module_result_t **out_results, size_t *out_coun
     *out_results = res; *out_count = idx; return 0;
 }
 
-int run_report(module_result_t *all_results, size_t count, const char *out_path) {
-    FILE *f = fopen(out_path, "w");
-    if(!f) return -1;
-    fprintf(f, "{\n  \"results\": [\n");
-    for(size_t i=0;i<count;i++) {
-        fprintf(f, "    {\"module\": %d, \"name\": \"%s\", \"data\": \"", all_results[i].type, all_results[i].name);
-        /* naive JSON escaping */
-        for(char *p = all_results[i].data; p && *p; ++p) {
-            if(*p=='"' || *p=='\\') fputc('\\', f);
-            if(*p=='\n') { fputs("\\n", f); continue; }
-            fputc(*p, f);
-        }
-        fprintf(f, "\"}%s\n", (i+1<count)?",":"");
-    }
-    fprintf(f, "  ]\n}\n");
-    fclose(f);
-    return 0;
+int run_report(module_result_t *all_results, size_t count, const char *target) {
+    return generate_summary_report(all_results, count, target, "reports");
 }
 
 void free_results(module_result_t *results, size_t count) {

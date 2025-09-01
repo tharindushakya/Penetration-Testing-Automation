@@ -1,0 +1,10 @@
+{
+  "target": "httpbin.org",
+  "timestamp": "20250902_014737",
+  "results": [
+    {"module": 0, "name": "dns_lookup", "data": "A:93.184.216.34;AAAA:2606:2800:220:1:248:1893:25c8:1946"},
+    {"module": 0, "name": "port_scan", "data": "22/tcp open ssh;80/tcp open http"},
+    {"module": 1, "name": "RULE-0004", "data": "RULE-0004 matched 'Server: nginx' severity=1"},
+    {"module": 1, "name": "RULE-0005", "data": "RULE-0005 matched 'X-Powered-By: Express' severity=3"}
+  ]
+}

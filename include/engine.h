@@ -13,7 +13,7 @@ typedef struct module_result {
 
 int run_recon(const char *target, module_result_t **out_results, size_t *out_count);
 int run_vuln(const char *target, module_result_t **out_results, size_t *out_count);
-int run_report(module_result_t *all_results, size_t count, const char *out_path);
+int run_report(module_result_t *all_results, size_t count, const char *target);
 
 void free_results(module_result_t *results, size_t count);
 
