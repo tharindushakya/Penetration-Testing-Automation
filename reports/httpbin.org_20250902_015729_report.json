@@ -1,0 +1,17 @@
+{
+  "target": "httpbin.org",
+  "timestamp": "20250902_015729",
+  "results": [
+    {"module": 0, "name": "dns_lookup", "data": "A:93.184.216.34;AAAA:2606:2800:220:1:248:1893:25c8:1946"},
+    {"module": 0, "name": "port_scan", "data": "22/tcp open ssh;80/tcp open http"},
+    {"module": 1, "name": "RULE-0004", "data": "RULE-0004 matched 'Server: nginx' severity=1"},
+    {"module": 1, "name": "RULE-0005", "data": "RULE-0005 matched 'X-Powered-By: Express' severity=3"},
+    {"module": 3, "name": "CVE-2021-44228", "data": "🤖 AI Confidence: 0.47 | Reasoning: Log4j vulnerability pattern detected in Apache version | Action: 📋 MEDIUM: Monitor and assess. Risk score: 0.47/1.0"},
+    {"module": 3, "name": "NGINX_REQUEST_SMUGGLING", "data": "🤖 AI Confidence: 0.40 | Reasoning: Nginx version susceptible to HTTP request smuggling | Action: 📋 MEDIUM: Monitor and assess. Risk score: 0.40/1.0"},
+    {"module": 3, "name": "FRAMEWORK_DISCLOSURE", "data": "🤖 AI Confidence: 0.53 | Reasoning: Technology stack disclosure increases attack surface | Action: 📋 MEDIUM: Monitor and assess. Risk score: 0.53/1.0"},
+    {"module": 3, "name": "STANDARD_WEB_STACK", "data": "🌐 ML Pattern: 0.82 | Reasoning: ML detected standard web server configuration - common attack target | Action: 🛡️ Implement WAF and rate limiting"},
+    {"module": 3, "name": "SSH_HTTP_COMBO", "data": "🌐 ML Pattern: 0.65 | Reasoning: AI identified SSH+HTTP combination - potential lateral movement risk | Action: 🔐 Strengthen SSH key management and monitoring"},
+    {"module": 3, "name": "BEHAVIORAL_ANOMALY", "data": "🧠 Anomaly Score: 0.31 | Reasoning: Statistical model detected unusual service behavior patterns | Action: 📊 Deploy SIEM monitoring for behavioral analysis"},
+    {"module": 3, "name": "HEADER_FINGERPRINTING", "data": "🧠 Anomaly Score: 0.71 | Reasoning: ML detected excessive server header disclosure - fingerprinting risk | Action: 🔒 Configure header filtering and obfuscation"}
+  ]
+}

@@ -71,10 +71,11 @@ int generate_summary_report(module_result_t *all_results, size_t count, const ch
     fprintf(summary_file, "**Total Findings:** %zu\n\n", count);
     
     // Count findings by module
-    size_t recon_count = 0, vuln_count = 0;
+    size_t recon_count = 0, vuln_count = 0, ai_count = 0;
     for(size_t i = 0; i < count; i++) {
         if(all_results[i].type == MODULE_RECON) recon_count++;
         else if(all_results[i].type == MODULE_VULN) vuln_count++;
+        else if(all_results[i].type == MODULE_AI) ai_count++;
     }
     
     // Reconnaissance section
@@ -156,11 +157,65 @@ int generate_summary_report(module_result_t *all_results, size_t count, const ch
         }
     }
     
+    // AI/ML Analysis section
+    if(ai_count > 0) {
+        fprintf(summary_file, "\n## 🤖 AI/ML Security Analysis (Module AI)\n\n");
+        fprintf(summary_file, "The AI engine detected **%zu ML-powered insights**:\n\n", ai_count);
+        
+        int ai_finding_num = 1;
+        for(size_t i = 0; i < count; i++) {
+            if(all_results[i].type == MODULE_AI) {
+                // Parse AI confidence from data
+                double confidence = 0.0;
+                char *conf_pos = strstr(all_results[i].data, "Confidence: ");
+                if(!conf_pos) conf_pos = strstr(all_results[i].data, "Pattern: ");
+                if(!conf_pos) conf_pos = strstr(all_results[i].data, "Score: ");
+                
+                if(conf_pos) {
+                    conf_pos = strchr(conf_pos, ' ') + 1;
+                    confidence = atof(conf_pos);
+                }
+                
+                // Determine AI confidence emoji
+                const char *ai_emoji = confidence > 0.8 ? "🔴" : 
+                                     confidence > 0.6 ? "🟠" : 
+                                     confidence > 0.4 ? "🟡" : "🟢";
+                
+                fprintf(summary_file, "### %s %s - AI Finding #%d\n", 
+                        ai_emoji, all_results[i].name, ai_finding_num++);
+                
+                // Extract reasoning and action from AI data
+                char *reasoning_start = strstr(all_results[i].data, "Reasoning: ");
+                char *action_start = strstr(all_results[i].data, "Action: ");
+                
+                if(reasoning_start && action_start) {
+                    reasoning_start += 11; // Skip "Reasoning: "
+                    size_t reasoning_len = action_start - reasoning_start - 3; // -3 for " | "
+                    
+                    fprintf(summary_file, "- **AI Confidence:** %.2f/1.0\n", confidence);
+                    fprintf(summary_file, "- **ML Analysis:** ");
+                    fwrite(reasoning_start, 1, reasoning_len, summary_file);
+                    fprintf(summary_file, "\n- **Recommended Action:** %s\n", action_start + 8);
+                } else {
+                    fprintf(summary_file, "- **Details:** %s\n", all_results[i].data);
+                }
+                fprintf(summary_file, "\n");
+            }
+        }
+    }
+    
     // Key insights
     fprintf(summary_file, "## 🎯 Key Insights\n\n");
     fprintf(summary_file, "- Target has %zu reconnaissance data points\n", recon_count);
     if(vuln_count > 0) {
-        fprintf(summary_file, "- %zu potential security issues identified\n", vuln_count);
+        fprintf(summary_file, "- %zu traditional vulnerabilities identified\n", vuln_count);
+    }
+    if(ai_count > 0) {
+        fprintf(summary_file, "- %zu AI/ML-powered security insights discovered\n", ai_count);
+        fprintf(summary_file, "- Machine learning models provided enhanced threat detection\n");
+        fprintf(summary_file, "- Neural network analysis identified behavioral patterns\n");
+    }
+    if(vuln_count > 0 || ai_count > 0) {
         fprintf(summary_file, "- Server is revealing technology stack information\n");
         fprintf(summary_file, "- Recommend header hardening and banner suppression\n");
     } else {

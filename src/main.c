@@ -32,12 +32,28 @@ static void run_full(const char *target) {
         free_results(recon, recon_count);
         return;
     }
-    size_t total = recon_count + vuln_count;
+    
+    // Add AI/ML analysis
+    module_result_t *ai_results=NULL; size_t ai_count=0;
+    if(run_ai_analysis(target, "scan_data", &ai_results, &ai_count)!=0) {
+        fprintf(stderr, "[!] AI analysis failed\n");
+    }
+    
+    size_t total = recon_count + vuln_count + ai_count;
     module_result_t *all = calloc(total, sizeof(module_result_t));
-    if(!all) { free_results(recon, recon_count); free_results(vuln, vuln_count); return; }
+    if(!all) { 
+        free_results(recon, recon_count); 
+        free_results(vuln, vuln_count);
+        free_results(ai_results, ai_count);
+        return; 
+    }
+    
     for(size_t i=0;i<recon_count;i++) all[i]=recon[i];
     for(size_t j=0;j<vuln_count;j++) all[recon_count+j]=vuln[j];
-    free(recon); free(vuln);
+    for(size_t k=0;k<ai_count;k++) all[recon_count+vuln_count+k]=ai_results[k];
+    
+    free(recon); free(vuln); free(ai_results);
+    
     ensure_reports_dir();
     if(run_report(all, total, target) != 0) {
         fprintf(stderr, "[!] Report generation failed\n");
@@ -47,7 +63,14 @@ static void run_full(const char *target) {
 
 static void run_single(const char *target, int which) {
     module_result_t *res=NULL; size_t count=0;
-    int rc = (which==1)?run_recon(target,&res,&count):run_vuln(target,&res,&count);
+    int rc = -1;
+    
+    switch(which) {
+        case 1: rc = run_recon(target,&res,&count); break;
+        case 2: rc = run_vuln(target,&res,&count); break;
+        case 3: rc = run_ai_analysis(target,"scan_data",&res,&count); break;
+    }
+    
     if(rc!=0) { fprintf(stderr, "[!] Module failed\n"); return; }
     for(size_t i=0;i<count;i++) {
         printf("%s: %s\n", res[i].name, res[i].data);
@@ -65,11 +88,11 @@ int main(int argc, char **argv) {
     printf("PenTest Automation Toolkit (interactive)\n");
     for(;;) {
         printf("\nTarget: %s\n", target);
-        printf("[1] Recon only\n[2] Vulnerability scan only\n[3] Full workflow (recon+vuln+report)\n[4] Change target\n[0] Exit\n> ");
+        printf("[1] Recon only\n[2] Vulnerability scan only\n[3] 🤖 AI/ML Analysis\n[4] Full workflow (recon+vuln+AI+report)\n[5] Change target\n[0] Exit\n> ");
         fflush(stdout);
         int choice=-1; if(scanf("%d", &choice)!=1) { break; }
         if(choice==0) break;
-        if(choice==4) {
+        if(choice==5) {
             printf("Enter new target: "); fflush(stdout);
             scanf("%255s", target);
             continue;
@@ -77,7 +100,8 @@ int main(int argc, char **argv) {
         switch(choice) {
             case 1: run_single(target,1); break;
             case 2: run_single(target,2); break;
-            case 3: run_full(target); break;
+            case 3: run_single(target,3); break;
+            case 4: run_full(target); break;
             default: printf("Invalid option\n"); break;
         }
     }
