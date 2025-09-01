@@ -23,38 +23,9 @@ static const struct {
     {"Connection: keep-alive", "DOS_VECTOR", 0.35, "Keep-alive connections can be exploited for DoS attacks"}
 };
 
-// Neural network simulation for pattern scoring
-static double neural_network_score(const char *input, const char *pattern) {
-    // Simplified neural network simulation using string similarity + ML weights
-    double base_score = (strstr(input, pattern) != NULL) ? 1.0 : 0.0;
-    
-    // Add ML-like features: pattern complexity, frequency, context
-    double complexity_weight = strlen(pattern) / 20.0;
-    double context_weight = (strstr(input, "Server:") || strstr(input, "X-Powered-By:")) ? 0.3 : 0.1;
-    
-    // Simulate neural activation function (sigmoid)
-    double raw_score = base_score + complexity_weight + context_weight;
-    return 1.0 / (1.0 + exp(-raw_score));
-}
-
-// Bayesian probability calculation for threat assessment
-static double calculate_threat_probability(const char *evidence[], size_t evidence_count) {
-    double prior = 0.1; // Base threat probability
-    double likelihood = 1.0;
-    
-    for(size_t i = 0; i < evidence_count; i++) {
-        // Simulate Bayesian update based on evidence strength
-        double evidence_weight = strlen(evidence[i]) > 10 ? 0.8 : 0.4;
-        likelihood *= evidence_weight;
-    }
-    
-    // Bayesian posterior probability
-    return (likelihood * prior) / ((likelihood * prior) + ((1 - likelihood) * (1 - prior)));
-}
-
-// Advanced pattern matching with ML confidence scoring
+// Advanced pattern matching with confidence scoring
 static double advanced_pattern_match(const char *data, const char *pattern) {
-    // Fuzzy matching with Levenshtein distance approximation
+    // Simple pattern matching with confidence scoring
     if(!data || !pattern) return 0.0;
     
     char *match = strstr(data, pattern);

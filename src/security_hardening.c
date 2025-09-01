@@ -20,8 +20,14 @@ void enable_dep_aslr() {
     HMODULE kernel32 = GetModuleHandleA("kernel32.dll");
     if (kernel32) {
         typedef BOOL (WINAPI *SetProcessDEPPolicy_t)(DWORD);
+        
+        // Suppress function pointer cast warning - this is a Windows API quirk
+        #pragma GCC diagnostic push
+        #pragma GCC diagnostic ignored "-Wcast-function-type"
         SetProcessDEPPolicy_t SetProcessDEPPolicy = 
             (SetProcessDEPPolicy_t)GetProcAddress(kernel32, "SetProcessDEPPolicy");
+        #pragma GCC diagnostic pop
+        
         if (SetProcessDEPPolicy) {
             SetProcessDEPPolicy(PROCESS_DEP_ENABLE | PROCESS_DEP_DISABLE_ATL_THUNK_EMULATION);
         }
@@ -113,14 +119,14 @@ void secure_organizational_cleanup() {
     // Clear all temporary files
     char temp_path[MAX_PATH];
     if (GetTempPathA(MAX_PATH, temp_path)) {
-        char pattern[MAX_PATH];
+        char pattern[MAX_PATH * 2];  // Larger buffer to avoid truncation
         snprintf(pattern, sizeof(pattern), "%sSecureScan*", temp_path);
         
         WIN32_FIND_DATAA find_data;
         HANDLE hFind = FindFirstFileA(pattern, &find_data);
         if (hFind != INVALID_HANDLE_VALUE) {
             do {
-                char full_path[MAX_PATH];
+                char full_path[MAX_PATH * 2];  // Larger buffer to avoid truncation
                 snprintf(full_path, sizeof(full_path), "%s%s", temp_path, find_data.cFileName);
                 DeleteFileA(full_path);
             } while (FindNextFileA(hFind, &find_data));
