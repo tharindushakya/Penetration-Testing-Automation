@@ -1,0 +1,10 @@
+{
+  "version": 1,
+  "rules": [
+    {"id": "RULE-0001", "pattern": "Apache/2", "desc": "Apache 2.x detected - check for known CVEs", "severity": 2},
+    {"id": "RULE-0002", "pattern": "OpenSSH_7", "desc": "OpenSSH 7.x - review for outdated minor versions", "severity": 2},
+    {"id": "RULE-0003", "pattern": "PHP/5.6", "desc": "Legacy PHP 5.6 exposed", "severity": 4},
+    {"id": "RULE-0004", "pattern": "Server: nginx", "desc": "Nginx server header present", "severity": 1},
+    {"id": "RULE-0005", "pattern": "X-Powered-By: Express", "desc": "Express framework header leaks stack info", "severity": 3}
+  ]
+}
